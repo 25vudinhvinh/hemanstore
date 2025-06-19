@@ -1,6 +1,6 @@
 const poll = require("../config/pg");
 
-const images = {
+const Images = {
     getUrlImageSlide: async () => {
         try {
             const result = await poll.query("SELECT * FROM slider");
@@ -11,4 +11,4 @@ const images = {
     },
 };
 
-module.exports = images;
+module.exports = Images;
