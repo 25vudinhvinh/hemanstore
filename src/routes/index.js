@@ -4,6 +4,6 @@ const brandRouter = require("../route/brandRoute");
 const imagesController = require("../route/imageRoute");
 
 router.use("/brands", brandRouter);
-router.use("/slider", imagesController);
+router.use("/images", imagesController);
 
 module.exports = router;
