@@ -4,7 +4,7 @@ const Products = {
     getHotProducts: async () => {
         try {
             const result = await pool.query(
-                `SELECT p.id, p.name, p.price, p.price_sale, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
+                `SELECT p.id, p.name, p.price, p.price_sale, p.brand_id, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
             LEFT JOIN brands b ON p.brand_id = b.id
             LEFT JOIN images i ON p.id = i.product_id
             WHERE i.image_type = 'main'
@@ -20,7 +20,7 @@ const Products = {
     getAdidas: async () => {
         try {
             const result = await pool.query(
-                `SELECT p.id, p.name, p.price, p.price_sale, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
+                `SELECT p.id, p.name, p.price, p.price_sale, p.brand_id, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
             LEFT JOIN brands b ON p.brand_id = b.id
             LEFT JOIN images i ON p.id = i.product_id
             WHERE b.name = 'ADIDAS' AND i.image_type = 'main'
@@ -36,7 +36,7 @@ const Products = {
     getNike: async () => {
         try {
             const result = await pool.query(
-                `SELECT p.id, p.name, p.price, p.price_sale, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
+                `SELECT p.id, p.name, p.price, p.price_sale, p.brand_id, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
             LEFT JOIN brands b ON p.brand_id = b.id
             LEFT JOIN images i ON p.id = i.product_id
             WHERE b.name = 'NIKE' AND i.image_type = 'main'
@@ -52,7 +52,7 @@ const Products = {
     getMLB: async () => {
         try {
             const result = await pool.query(
-                `SELECT p.id, p.name, p.price, p.price_sale, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
+                `SELECT p.id, p.name, p.price, p.price_sale, p.brand_id, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
             LEFT JOIN brands b ON p.brand_id = b.id
             LEFT JOIN images i ON p.id = i.product_id
             WHERE b.name = 'MLB' AND i.image_type = 'main'
@@ -68,7 +68,7 @@ const Products = {
     getNEWBALANCE: async () => {
         try {
             const result = await pool.query(
-                `SELECT p.id, p.name, p.price, p.price_sale, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
+                `SELECT p.id, p.name, p.price, p.price_sale, p.brand_id, p.views, b.name AS brand_name, i.image_url, i.image_type FROM products p
             LEFT JOIN brands b ON p.brand_id = b.id
             LEFT JOIN images i ON p.id = i.product_id
             WHERE b.name = 'NEWBALANCE' AND i.image_type = 'main'
@@ -83,7 +83,7 @@ const Products = {
 
     getDetail: async (product_id) => {
         const result = await pool.query(
-            `SELECT p.id AS product_id, p.name, p.price, p.price_sale, 
+            `SELECT p.id AS product_id, p.name, p.price, p.brand_id, p.price_sale,
           array_agg(s.size) AS sizes, 
           (SELECT jsonb_agg(jsonb_build_object(
             'url', img.image_url,
