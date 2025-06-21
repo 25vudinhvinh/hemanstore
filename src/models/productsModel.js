@@ -80,6 +80,27 @@ const Products = {
             throw new Error(`Error fetching adidas: ${err.message}`);
         }
     },
+
+    getDetail: async (product_id) => {
+        const result = await pool.query(
+            `SELECT p.id AS product_id, p.name, p.price, p.price_sale, 
+          array_agg(s.size) AS sizes, 
+          (SELECT jsonb_agg(jsonb_build_object(
+            'url', img.image_url,
+            'display_order', img.display_order
+          ) ORDER BY img.display_order ASC)
+           FROM (SELECT DISTINCT image_url, display_order 
+                 FROM images WHERE product_id = p.id) img
+          ) AS images 
+   FROM products p
+   LEFT JOIN sizes s ON p.id = s.product_id
+   WHERE p.id = $1
+   GROUP BY p.id, p.name, p.price, p.price_sale
+   ORDER BY p.id`,
+            [product_id]
+        );
+        return result.rows;
+    },
 };
 
 module.exports = Products;

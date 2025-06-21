@@ -74,3 +74,19 @@ exports.getNEWBALANCE = async (req, res) => {
         });
     }
 };
+
+exports.getDetail = async (req, res) => {
+    const product_id = req.body.product_id;
+    try {
+        const detailProcuct = await Products.getDetail(product_id);
+        res.status(200).json({
+            success: true,
+            data: detailProcuct,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
