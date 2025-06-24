@@ -82,24 +82,50 @@ const Products = {
     },
 
     getDetail: async (product_id) => {
-        const result = await pool.query(
-            `SELECT p.id AS product_id, p.name, p.price, p.brand_id, p.price_sale,
-          array_agg(s.size) AS sizes, 
-          (SELECT jsonb_agg(jsonb_build_object(
-            'url', img.image_url,
-            'display_order', img.display_order
-          ) ORDER BY img.display_order ASC)
-           FROM (SELECT DISTINCT image_url, display_order 
-                 FROM images WHERE product_id = p.id) img
-          ) AS images 
-   FROM products p
-   LEFT JOIN sizes s ON p.id = s.product_id
-   WHERE p.id = $1
-   GROUP BY p.id, p.name, p.price, p.price_sale
-   ORDER BY p.id`,
-            [product_id]
-        );
-        return result.rows;
+        try {
+            const result = await pool.query(
+                `SELECT p.id AS product_id, p.name, p.price, p.brand_id, p.price_sale,
+              array_agg(s.size) AS sizes, 
+              (SELECT jsonb_agg(jsonb_build_object(
+                'url', img.image_url,
+                'display_order', img.display_order
+              ) ORDER BY img.display_order ASC)
+               FROM (SELECT DISTINCT image_url, display_order 
+                     FROM images WHERE product_id = p.id) img
+              ) AS images 
+            FROM products p
+            LEFT JOIN sizes s ON p.id = s.product_id
+             WHERE p.id = $1
+             GROUP BY p.id, p.name, p.price, p.price_sale
+            ORDER BY p.id`,
+                [product_id]
+            );
+            return result.rows;
+        } catch (err) {
+            throw new Error(
+                `Error fetching get detail product: ${err.message}`
+            );
+        }
+    },
+
+    getSameProduct: async (brand_id, product_id) => {
+        try {
+            const result = await pool.query(
+                `
+                SELECT p.id, p.name, p.price, p.price_sale, p.views, p.brand_id,
+         jsonb_agg(json_build_object('url', i.image_url, 'type', i.image_type)) AS images
+        FROM products p
+        LEFT JOIN images i ON p.id = i.product_id
+        WHERE p.brand_id = $1 AND i.image_type IN ('main', 'hover') AND p.id <> $2
+        GROUP BY p.id
+        ORDER BY RANDOM()
+        LIMIT 8;`,
+                [brand_id, product_id]
+            );
+            return result.rows;
+        } catch (err) {
+            throw new Error(`Error fetching same product: ${err.message}`);
+        }
     },
 };
 

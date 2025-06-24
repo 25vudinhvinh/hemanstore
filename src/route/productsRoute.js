@@ -8,4 +8,5 @@ router.get("/nike-limit", Products.getNike);
 router.get("/mlb-limit", Products.getMLB);
 router.get("/newbalance-limit", Products.getNEWBALANCE);
 router.post("/detail", Products.getDetail);
+router.post("/same", Products.getSameProduct);
 module.exports = router;

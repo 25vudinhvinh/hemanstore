@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+p {
+    margin-bottom: 0;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(-2%);
+    }
+}
+.animate-slide-in {
+    animation: slide-in 0.3s ease-in-out forwards;
+}
