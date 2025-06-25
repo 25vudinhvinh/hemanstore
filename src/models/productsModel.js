@@ -128,19 +128,23 @@ const Products = {
         }
     },
 
-    getBigSize: async () => {
+    getBigSize: async (limitProduct, offset) => {
         try {
-            const query = await pool.query(`
-                    SELECT DISTINCT p.id, p.name, p.price, p.price_sale, p.views, p.brand_id, array_agg (DISTINCT s.size) as sizes,
-         jsonb_agg(json_build_object('url', i.image_url, 'type', i.image_type)) AS images
+            const query = await pool.query(
+                `
+        SELECT DISTINCT p.id, p.name, p.price, p.price_sale, p.views, p.brand_id, 
+               array_agg(DISTINCT s.size) AS sizes,
+               jsonb_agg(DISTINCT jsonb_build_object('url', i.image_url, 'type', i.image_type)) AS images
         FROM products p
         LEFT JOIN images i ON p.id = i.product_id
-		LEFT JOIN sizes s ON p.id = s.product_id
+        LEFT JOIN sizes s ON p.id = s.product_id
         WHERE s.size > 44 AND i.image_type IN ('main', 'hover')
         GROUP BY p.id
         ORDER BY p.brand_id
-		LIMIT 12 OFFSET (12*0)     
-            `);
+        LIMIT $1 OFFSET (CAST($1 AS integer) * CAST($2 AS integer))     
+    `,
+                [limitProduct, offset]
+            );
             return query;
         } catch (err) {
             throw new Error(`Error fetching big size: ${err.message}`);
@@ -154,7 +158,7 @@ const Products = {
             LEFT JOIN images i ON p.id = i.product_id
             LEFT JOIN sizes s ON p.id = s.product_id
             WHERE s.size > 44 AND i.image_type IN ('main', 'hover');`);
-            return query;
+            return query.rows;
         } catch (err) {
             throw new Error(`error fetching count big size: ${err.message}`);
         }

@@ -112,15 +112,27 @@ exports.getSameProduct = async (req, res) => {
 };
 
 exports.getBigSize = async (req, res) => {
-    const limit = 12;
+    const { page = 1 } = req.body;
+    const pageNum = parseInt(page);
+    const limitProduct = 12;
     try {
-        const rowcount = await Products.getCountBigsize();
-        const result = await Products.getBigSize();
-        const rowcountJson = rowcount.total_count;
-        const pagesTotal = Math.ceil(rowcountJson / limit);
+        const result = await Products.getBigSize(limitProduct, offset);
+        const count = await Products.getCountBigsize();
+        const pagesTotal = Math.ceil(rowCount / limitProduct);
+        const rowCount = count[0].total_count;
+        const offset = pageNum - 1;
+
+        if (isNaN(pageNum) || pageNum < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid page number",
+            });
+        }
+
         res.status(200).json({
+            count: rowCount,
             pagesTotal: pagesTotal,
-            count: rowcountJson,
+            pageCurrent: pageNum,
             data: result.rows,
         });
     } catch (err) {
