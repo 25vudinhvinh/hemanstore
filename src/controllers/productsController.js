@@ -110,3 +110,23 @@ exports.getSameProduct = async (req, res) => {
         });
     }
 };
+
+exports.getBigSize = async (req, res) => {
+    const limit = 12;
+    try {
+        const rowcount = await Products.getCountBigsize();
+        const result = await Products.getBigSize();
+        const rowcountJson = rowcount.total_count;
+        const pagesTotal = Math.ceil(rowcountJson / limit);
+        res.status(200).json({
+            pagesTotal: pagesTotal,
+            count: rowcountJson,
+            data: result.rows,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
