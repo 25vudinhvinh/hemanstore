@@ -137,7 +137,7 @@ const Products = {
         }
     },
 
-    getBigSize: async (limitProduct, offset) => {
+    getBigSize: async (limitProduct, offset, sizes) => {
         try {
             const query = await pool.query(
                 `
@@ -146,27 +146,33 @@ const Products = {
                jsonb_agg(DISTINCT jsonb_build_object('url', i.image_url, 'type', i.image_type)) AS images
         FROM products p
         LEFT JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
-        LEFT JOIN sizes s ON p.id = s.product_id
-        WHERE s.size > 44 
+        LEFT JOIN sizes s ON p.id = s.product_id ${
+            sizes ? "AND s.size = ANY($3)" : ""
+        }
+        WHERE s.size > 43
         GROUP BY p.id
         ORDER BY p.brand_id
         LIMIT $1 OFFSET (CAST($1 AS integer) * CAST($2 AS integer))     
     `,
-                [limitProduct, offset]
+                sizes ? [limitProduct, offset, sizes] : [limitProduct, offset]
             );
             return query.rows;
         } catch (err) {
             throw new Error(`Error fetching big size: ${err.message}`);
         }
     },
-    CountBigsize: async () => {
+    CountBigsize: async (sizes) => {
         try {
-            const query =
-                await pool.query(`SELECT COUNT(DISTINCT p.id) AS total_count
+            const query = await pool.query(
+                `SELECT COUNT(DISTINCT p.id) AS total_count
             FROM products p
             LEFT JOIN images i ON p.id = i.product_id
-            LEFT JOIN sizes s ON p.id = s.product_id
-            WHERE s.size > 44 AND i.image_type IN ('main', 'hover');`);
+            LEFT JOIN sizes s ON p.id = s.product_id ${
+                sizes ? "AND s.size = ANY($1)" : ""
+            }
+            WHERE s.size > 43 AND i.image_type IN ('main', 'hover');`,
+                sizes ? [sizes] : ""
+            );
             return query.rows;
         } catch (err) {
             throw new Error(`error count big size: ${err.message}`);
@@ -182,7 +188,7 @@ const Products = {
             FROM products p
             JOIN sizes s ON p.id = s.product_id
             JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
-            WHERE p.brand_id = $1 ${sizes ? "and s.size = ANY($2)" : ""}
+            WHERE p.brand_id = $1 ${sizes ? "AND s.size = ANY($2)" : ""}
             GROUP BY p.id
             ORDER BY p.id
             ${

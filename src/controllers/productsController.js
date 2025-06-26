@@ -123,16 +123,24 @@ exports.getSameProduct = async (req, res) => {
 };
 
 exports.getBigSize = async (req, res) => {
-    const { page = 1 } = req.body;
+    let { page = 1, sizes } = req.body;
     const pageNum = parseInt(page);
     const limitProduct = 12;
     const offset = pageNum - 1;
     try {
-        const count = await Products.CountBigsize();
-        const rowCount = count[0].total_count;
-        const pagesTotal = Math.ceil(rowCount / limitProduct);
+        const count = await Products.CountBigsize(sizes);
+        const countProduct = count[0].total_count;
+        const pagesTotal = Math.ceil(countProduct / limitProduct);
 
-        const result = await Products.getBigSize(limitProduct, offset);
+        if (sizes) {
+            if (!Array.isArray(sizes)) {
+                res.status(400).json({
+                    success: false,
+                    message: "Size is a array and not null",
+                });
+            }
+        }
+
         if (isNaN(pageNum) || pageNum < 1) {
             return res.status(400).json({
                 success: false,
@@ -140,7 +148,11 @@ exports.getBigSize = async (req, res) => {
             });
         }
 
+        const result = await Products.getBigSize(limitProduct, offset, sizes);
+
         res.status(200).json({
+            countProduct: countProduct,
+            limit: limitProduct,
             pagesTotal: pagesTotal,
             pageCurrent: pageNum,
             data: result,
