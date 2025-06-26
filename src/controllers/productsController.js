@@ -179,11 +179,13 @@ exports.getProductsCategory = async (req, res) => {
                 message: "Invalid value brandId",
             });
         }
-        if (!Array.isArray(sizes) || sizes.length == 0) {
-            res.status(400).json({
-                success: false,
-                message: "sizes not is Array and not null",
-            });
+        if (sizes) {
+            if (!Array.isArray(sizes) || sizes.length == 0) {
+                res.status(400).json({
+                    success: false,
+                    message: "sizes not is Array and not null",
+                });
+            }
         }
         const countProduct = await Products.countProductCategory(
             brandId,
