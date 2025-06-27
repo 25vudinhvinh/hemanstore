@@ -207,7 +207,7 @@ const Products = {
         try {
             const query = await pool.query(
                 `
-            SELECT COUNT (distinct p.id) AS total_count FROM products p
+            SELECT COUNT (DISTINCT p.id) AS total_count FROM products p
             JOIN sizes s ON p.id = s.product_id ${
                 sizes ? "AND s.size = ANY($2)" : ""
             }
@@ -218,6 +218,51 @@ const Products = {
             return query.rows;
         } catch (err) {
             throw new Error(`Error count product category:${err.message}`);
+        }
+    },
+
+    getProductsSubBrandId: async (subBrandId, sizes, limitProduct, offSet) => {
+        try {
+            const query = await pool.query(
+                `
+                SELECT p.id, p.name, p.brand_id, p.sub_brand_id, ARRAY_AGG(DISTINCT s.size) AS sizes,
+        JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'type', i.image_type)) AS images
+        FROM products p
+        JOIN sizes s ON p.id = s.product_id ${
+            sizes ? "AND s.size = ANY($4)" : ""
+        }
+        JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
+        WHERE p.sub_brand_id = $1
+        GROUP BY p.id
+        ORDER BY p.id, p.brand_id
+        LIMIT $2 OFFSET $3
+                `,
+                sizes
+                    ? [subBrandId, limitProduct, offSet, sizes]
+                    : [subBrandId, limitProduct, offSet]
+            );
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error fetching sub-brand-id: ${err.message}`);
+        }
+    },
+
+    countSubBrand: async (subBrandId, sizes) => {
+        try {
+            const query = await pool.query(
+                `
+              SELECT COUNT(DISTINCT p.id) 
+        FROM products p
+        JOIN sizes s ON p.id = s.product_id ${
+            sizes ? "AND s.size = ANY($2)" : ""
+        }
+        WHERE p.sub_brand_id = $1  
+                `,
+                sizes ? [subBrandId, sizes] : [subBrandId]
+            );
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error COUNT sub Brand: ${err.message}`);
         }
     },
 };

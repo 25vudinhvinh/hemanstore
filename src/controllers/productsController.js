@@ -231,3 +231,51 @@ exports.getProductsCategory = async (req, res) => {
         });
     }
 };
+
+exports.getProductSubBrandId = async (req, res) => {
+    try {
+        const { subBrandId, sizes, page = 1 } = req.body;
+        const limitProduct = 12;
+        const offSet = (page - 1) * limitProduct;
+        if (isNaN(subBrandId)) {
+            return res.status(400).json({
+                success: false,
+                message: "subBrandId must be a number",
+            });
+        }
+        if (sizes) {
+            if (!Array.isArray(sizes) || sizes.length < 1) {
+                return res.status(400).json({
+                    success: false,
+                    message: "sizes must be a array",
+                });
+            }
+        }
+
+        const countAllProducts = await Products.countSubBrand(
+            subBrandId,
+            sizes
+        );
+        const countNum = parseInt(countAllProducts[0].count);
+        const totalPage = Math.ceil(countNum / limitProduct);
+        const result = await Products.getProductsSubBrandId(
+            subBrandId,
+            sizes,
+            limitProduct,
+            offSet
+        );
+
+        res.status(200).json({
+            countAllProduct: countNum,
+            limitProduct: limitProduct,
+            totalPage: totalPage,
+            pageCurrent: page,
+            data: result,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};

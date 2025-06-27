@@ -12,4 +12,5 @@ router.post("/detail", Products.getDetail);
 router.post("/same", Products.getSameProduct);
 router.post("/big-size", Products.getBigSize);
 router.post("/category", Products.getProductsCategory);
+router.post("/sub-brand", Products.getProductSubBrandId);
 module.exports = router;
