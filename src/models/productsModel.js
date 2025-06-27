@@ -18,7 +18,7 @@ const Products = {
             LEFT JOIN images i ON p.id = i.product_id
             WHERE i.image_type = 'main'
             ORDER BY p.views DESC
-            LIMIT 8`
+            LIMIT 10`
             );
             return query.rows;
         } catch (err) {
@@ -151,8 +151,8 @@ const Products = {
         }
         WHERE s.size > 43
         GROUP BY p.id
-        ORDER BY p.brand_id
-        LIMIT $1 OFFSET (CAST($1 AS integer) * CAST($2 AS integer))     
+        ORDER BY p.brand_id, p.id
+        LIMIT $1 OFFSET $2   
     `,
                 sizes ? [limitProduct, offset, sizes] : [limitProduct, offset]
             );
@@ -179,27 +179,33 @@ const Products = {
         }
     },
 
-    getProductsCategory: async (brandId, sizes, limitProduct, offSet) => {
+    getProductsCategory: async (
+        brandId,
+        sizes,
+        limitProduct,
+        offSet,
+        subBrandId
+    ) => {
         try {
             const query = await pool.query(
                 `SELECT p.id, p.name, p.brand_id, p.price, p.price_sale, 
-                ARRAY_AGG(DISTINCT s.size ORDER BY s.size) AS sizes, 
-                JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'type', i.image_type)) AS images 
-            FROM products p
-            JOIN sizes s ON p.id = s.product_id
-            JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
-            WHERE p.brand_id = $1 ${sizes ? "AND s.size = ANY($2)" : ""}
-            GROUP BY p.id
-            ORDER BY p.id
-            ${
+            ARRAY_AGG(DISTINCT s.size ORDER BY s.size) AS sizes, 
+            JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'type', i.image_type)) AS images 
+     FROM products p
+     JOIN sizes s ON p.id = s.product_id
+     JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
+     WHERE 
+         ($1 IS NOT NULL AND p.brand_id = $1 ) OR 
+         ($2 IS NOT NULL AND p.sub_brand_id = $2 )
+         ${sizes ? "AND s.size = ANY($3)" : ""}
+     GROUP BY p.id
+     ORDER BY p.id, p.brand_id
+     ${sizes ? `LIMIT $4 OFFSET $5` : `LIMIT $3 OFFSET $4`}`,
                 sizes
-                    ? `LIMIT $3 OFFSET(CAST($3 AS INT) * CAST($4 AS INT))`
-                    : `LIMIT $2 OFFSET(CAST($2 AS INT) * CAST($3 AS INT))`
-            } `,
-                sizes
-                    ? [brandId, sizes, limitProduct, offSet]
-                    : [brandId, limitProduct, offSet]
+                    ? [brandId, subBrandId, sizes, limitProduct, offSet]
+                    : [brandId, subBrandId, limitProduct, offSet]
             );
+
             return query.rows;
         } catch (err) {
             throw new Error(`Error fetching product category: ${err.message}`);
