@@ -179,13 +179,7 @@ const Products = {
         }
     },
 
-    getProductsCategory: async (
-        brandId,
-        sizes,
-        limitProduct,
-        offSet,
-        subBrandId
-    ) => {
+    getProductsCategory: async (brandId, sizes, limitProduct, offSet) => {
         try {
             const query = await pool.query(
                 `SELECT p.id, p.name, p.brand_id, p.price, p.price_sale, 
@@ -194,16 +188,13 @@ const Products = {
      FROM products p
      JOIN sizes s ON p.id = s.product_id
      JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
-     WHERE 
-         ($1 IS NOT NULL AND p.brand_id = $1 ) OR 
-         ($2 IS NOT NULL AND p.sub_brand_id = $2 )
-         ${sizes ? "AND s.size = ANY($3)" : ""}
+     WHERE p.brand_id = $1 ${sizes ? "AND s.size = ANY($2)" : ""}
      GROUP BY p.id
      ORDER BY p.id, p.brand_id
-     ${sizes ? `LIMIT $4 OFFSET $5` : `LIMIT $3 OFFSET $4`}`,
+     ${sizes ? `LIMIT $3 OFFSET $4` : `LIMIT $2 OFFSET $3`}`,
                 sizes
-                    ? [brandId, subBrandId, sizes, limitProduct, offSet]
-                    : [brandId, subBrandId, limitProduct, offSet]
+                    ? [brandId, sizes, limitProduct, offSet]
+                    : [brandId, limitProduct, offSet]
             );
 
             return query.rows;

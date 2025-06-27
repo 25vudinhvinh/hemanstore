@@ -167,7 +167,7 @@ exports.getBigSize = async (req, res) => {
 
 exports.getProductsCategory = async (req, res) => {
     try {
-        let { sizes, brandId, page = 1, subBrandId } = req.body;
+        let { sizes, brandId, page = 1 } = req.body;
         const limitProduct = 12;
 
         // Kiểm tra page
@@ -190,25 +190,6 @@ exports.getProductsCategory = async (req, res) => {
             }
         }
 
-        // Kiểm tra subBrandId
-        if (subBrandId) {
-            subBrandId = parseInt(subBrandId);
-            if (isNaN(subBrandId)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "subBrandId must be a number",
-                });
-            }
-        }
-
-        // Kiểm tra điều kiện brandId và subBrandId
-        if ((brandId && subBrandId) || (!brandId && !subBrandId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Only one of brandId or subBrandId must be provided",
-            });
-        }
-
         // Kiểm tra sizes
         if (sizes) {
             if (!Array.isArray(sizes) || sizes.length === 0) {
@@ -221,24 +202,24 @@ exports.getProductsCategory = async (req, res) => {
 
         // Tính toán số lượng sản phẩm
         const countProduct = await Products.countProductCategory(
-            brandId || null,
-            sizes || null,
-            subBrandId || null
+            brandId,
+            sizes
         );
         const totalPage = Math.ceil(countProduct[0].total_count / limitProduct);
         const offSet = (page - 1) * limitProduct;
 
         // Lấy danh sách sản phẩm
         const result = await Products.getProductsCategory(
-            brandId || null,
-            sizes || null,
+            brandId,
+            sizes,
             limitProduct,
-            offSet,
-            subBrandId || null
+            offSet
         );
 
         res.status(200).json({
             countProduct: countProduct[0].total_count,
+            limitProduct: limitProduct,
+            offSet: offSet,
             totalPage: totalPage,
             pageCurrent: page,
             data: result,
