@@ -10,6 +10,25 @@ const Products = {
             throw new Error(`Error fetching size: ${err.message}`);
         }
     },
+
+    findProduct: async (searchTerm) => {
+        try {
+            const query = await pool.query(
+                `
+                SELECT p.id, p.name, p.price, p.price_sale, p.brand_id, i.image_url FROM products p 
+            JOIN images i ON p.id = i.product_id AND i.image_type IN('main')
+            WHERE p.name ILIKE $1
+            GROUP BY p.id, i.id
+            ORDER BY p.id
+                `,
+                [searchTerm]
+            );
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error find product: ${err.message}`);
+        }
+    },
+
     getHotProducts: async () => {
         try {
             const query = await pool.query(
