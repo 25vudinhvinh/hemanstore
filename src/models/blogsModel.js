@@ -36,7 +36,23 @@ const Blogs = {
             );
             return query.rows;
         } catch (err) {
-            throw new Error(`Error create comment: ${err.message}`);
+            throw new Error(`Error get comment: ${err.message}`);
+        }
+    },
+
+    getBlogNew: async (blogId) => {
+        try {
+            const query = await pool.query(
+                `SELECT id, title
+                FROM blogs 
+                WHERE id != $1
+                ORDER BY created
+                LIMIT 5;`,
+                [blogId]
+            );
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error get blog new: ${err.message}`);
         }
     },
 };

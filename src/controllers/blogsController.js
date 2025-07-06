@@ -66,3 +66,19 @@ exports.getComment = async (req, res) => {
         });
     }
 };
+
+exports.getBlogNew = async (req, res) => {
+    try {
+        const { blogId } = req.body;
+        const result = await blogsModel.getBlogNew(blogId);
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
