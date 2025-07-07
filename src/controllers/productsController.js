@@ -201,19 +201,17 @@ exports.getBigSize = async (req, res) => {
 
 exports.getProductsCategory = async (req, res) => {
     try {
-        let { sizes, brandId, page = 1 } = req.body;
+        let { sizes, brandId, page = 1, priceRange } = req.body;
         const limitProduct = 12;
 
-        // Kiểm tra page
         page = parseInt(page);
-        if (isNaN(page) || page < 1) {
+        if (isNaN(page)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid page number",
             });
         }
 
-        // Kiểm tra brandId
         if (brandId) {
             brandId = parseInt(brandId);
             if (isNaN(brandId)) {
@@ -222,9 +220,13 @@ exports.getProductsCategory = async (req, res) => {
                     message: "Invalid value for brandId",
                 });
             }
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "brandId is required",
+            });
         }
 
-        // Kiểm tra sizes
         if (sizes) {
             if (!Array.isArray(sizes) || sizes.length === 0) {
                 return res.status(400).json({
@@ -234,20 +236,38 @@ exports.getProductsCategory = async (req, res) => {
             }
         }
 
-        // Tính toán số lượng sản phẩm
+        let minPrice = null;
+        let maxPrice = null;
+        if (priceRange) {
+            if (!["0-500000", "500000-1000000"].includes(priceRange)) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Invalid priceRange. Must be '0-500000' or '500000-1000000'",
+                });
+            }
+
+            [minPrice, maxPrice] = priceRange
+                .split("-")
+                .map((num) => Number(num) / 1000);
+        }
+
         const countProduct = await Products.countProductCategory(
             brandId,
-            sizes
+            sizes,
+            minPrice,
+            maxPrice
         );
         const totalPage = Math.ceil(countProduct[0].total_count / limitProduct);
         const offSet = (page - 1) * limitProduct;
 
-        // Lấy danh sách sản phẩm
         const result = await Products.getProductsCategory(
             brandId,
             sizes,
             limitProduct,
-            offSet
+            offSet,
+            minPrice,
+            maxPrice
         );
 
         res.status(200).json({
@@ -265,7 +285,6 @@ exports.getProductsCategory = async (req, res) => {
         });
     }
 };
-
 exports.getProductSubBrandId = async (req, res) => {
     try {
         const { subBrandId, sizes, page = 1 } = req.body;
