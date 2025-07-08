@@ -157,37 +157,60 @@ exports.getSameProduct = async (req, res) => {
 };
 
 exports.getBigSize = async (req, res) => {
-    let { page = 1, sizes } = req.body;
+    let { page = 1, sizes, minPrice, maxPrice } = req.body;
     const pageNum = parseInt(page);
     const limitProduct = 12;
     const offset = (pageNum - 1) * limitProduct;
     try {
-        const count = await Products.CountBigsize(sizes);
-        const countProduct = count[0].total_count;
-        const pagesTotal = Math.ceil(countProduct / limitProduct);
-
         if (sizes) {
-            if (!Array.isArray(sizes)) {
-                res.status(400).json({
+            if (!Array.isArray(sizes) || sizes.length === 0) {
+                return res.status(400).json({
                     success: false,
-                    message: "Size is a array and not null",
+                    message: "sizes must be a non-empty array",
                 });
             }
+        }
+
+        if (minPrice !== undefined && maxPrice !== undefined) {
+            minPrice = Number(minPrice);
+            maxPrice = Number(maxPrice);
+            if (isNaN(minPrice) || isNaN(maxPrice)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid number price",
+                });
+            }
+        } else {
+            minPrice = null;
+            maxPrice = null;
         }
 
         if (isNaN(pageNum) || pageNum < 1) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid page number",
+                message: "Inavalid number page",
             });
         }
 
-        const result = await Products.getBigSize(limitProduct, offset, sizes);
+        const countResult = await Products.countBigsize(
+            sizes,
+            minPrice,
+            maxPrice
+        );
+        const count = countResult[0]?.total_count || 0;
+        const total_page = Math.ceil(count / limitProduct);
+        const result = await Products.getBigSize(
+            limitProduct,
+            offset,
+            sizes,
+            minPrice,
+            maxPrice
+        );
 
         res.status(200).json({
-            countProduct: countProduct,
+            countProduct: count,
+            total_page: total_page,
             limit: limitProduct,
-            pagesTotal: pagesTotal,
             pageCurrent: pageNum,
             data: result,
         });

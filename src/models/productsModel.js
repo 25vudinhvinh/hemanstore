@@ -156,56 +156,66 @@ const Products = {
         }
     },
 
-    getBigSize: async (limitProduct, offset, sizes) => {
-        try {
-            const query = await pool.query(
-                `
-        SELECT DISTINCT p.id, p.name, p.price, p.price_sale, p.views, p.brand_id, 
-               array_agg(DISTINCT s.size) AS sizes,
-               jsonb_agg(DISTINCT jsonb_build_object('url', i.image_url, 'type', i.image_type)) AS images
-        FROM products p
-        LEFT JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
-        LEFT JOIN sizes s ON p.id = s.product_id ${
-            sizes ? "AND s.size = ANY($3)" : ""
-        }
-        WHERE s.size > 43
-        GROUP BY p.id
-        ORDER BY p.brand_id, p.id
-        LIMIT $1 OFFSET $2   
-    `,
-                sizes ? [limitProduct, offset, sizes] : [limitProduct, offset]
-            );
-            return query.rows;
-        } catch (err) {
-            throw new Error(`Error fetching big size: ${err.message}`);
-        }
-    },
-    countProductCategory: async (brandId, sizes, minPrice, maxPrice) => {
+    getBigSize: async (limitProduct, offset, sizes, minPrice, maxPrice) => {
         try {
             let queryStr = `
-            SELECT COUNT(DISTINCT p.id) AS total_count
+            SELECT DISTINCT p.id, p.name, p.price, p.price_sale, p.views, p.brand_id, 
+                   array_agg(DISTINCT s.size) AS sizes,
+                   jsonb_agg(DISTINCT jsonb_build_object('url', i.image_url, 'type', i.image_type)) AS images
             FROM products p
-            JOIN sizes s ON p.id = s.product_id
-            WHERE p.brand_id = $1
-        `;
-            const params = [brandId];
+            LEFT JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
+            LEFT JOIN sizes s ON p.id = s.product_id 
+            WHERE s.size > 44`;
+            const params = [];
 
-            if (sizes) {
+            if (sizes && sizes.length > 0) {
                 queryStr += ` AND s.size = ANY($${params.length + 1})`;
                 params.push(sizes);
             }
 
             if (minPrice !== null && maxPrice !== null) {
-                queryStr += ` AND p.price BETWEEN $${params.length + 1} AND $${
-                    params.length + 2
-                }`;
+                queryStr += ` AND p.price_sale BETWEEN $${
+                    params.length + 1
+                } AND $${params.length + 2}`;
+                params.push(minPrice, maxPrice);
+            }
+
+            queryStr += `
+            GROUP BY p.id
+            ORDER BY p.brand_id, p.id
+            LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+            params.push(limitProduct, offset);
+
+            const query = await pool.query(queryStr, params);
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error when counting sizes: ${err.message}`);
+        }
+    },
+    countBigsize: async (sizes, minPrice, maxPrice) => {
+        try {
+            let queryStr = `SELECT COUNT(DISTINCT p.id) AS total_count
+            FROM products p
+            JOIN sizes s ON p.id = s.product_id
+            WHERE s.size > 44`;
+            const params = [];
+
+            if (sizes && sizes.length > 0) {
+                queryStr += ` AND s.size = ANY($${params.length + 1})`;
+                params.push(sizes);
+            }
+
+            if (minPrice !== null && maxPrice !== null) {
+                queryStr += ` AND p.price_sale BETWEEN $${
+                    params.length + 1
+                } AND $${params.length + 2}`;
                 params.push(minPrice, maxPrice);
             }
 
             const query = await pool.query(queryStr, params);
             return query.rows;
         } catch (err) {
-            throw new Error(`Error counting product category: ${err.message}`);
+            throw new Error(`Error when counting sizes: ${err.message}`);
         }
     },
 
@@ -254,6 +264,36 @@ const Products = {
             throw new Error(`Error fetching product category: ${err.message}`);
         }
     },
+
+    countProductCategory: async (brandId, sizes, minPrice, maxPrice) => {
+        try {
+            let queryStr = `
+            SELECT COUNT(DISTINCT p.id) AS total_count
+            FROM products p
+            JOIN sizes s ON p.id = s.product_id
+            WHERE p.brand_id = $1
+        `;
+            const params = [brandId];
+
+            if (sizes) {
+                queryStr += ` AND s.size = ANY($${params.length + 1})`;
+                params.push(sizes);
+            }
+
+            if (minPrice !== null && maxPrice !== null) {
+                queryStr += ` AND p.price BETWEEN $${params.length + 1} AND $${
+                    params.length + 2
+                }`;
+                params.push(minPrice, maxPrice);
+            }
+
+            const query = await pool.query(queryStr, params);
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error counting product category: ${err.message}`);
+        }
+    },
+
     getProductsSubBrandId: async (subBrandId, sizes, limitProduct, offSet) => {
         try {
             const query = await pool.query(
