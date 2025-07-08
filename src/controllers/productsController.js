@@ -224,14 +224,21 @@ exports.getBigSize = async (req, res) => {
 
 exports.getProductsCategory = async (req, res) => {
     try {
-        let { sizes, brandId, page = 1, priceRange } = req.body;
+        let {
+            sizes,
+            brandId,
+            page = 1,
+            minPrice,
+            maxPrice,
+            subBrandId,
+        } = req.body;
         const limitProduct = 12;
 
         page = parseInt(page);
-        if (isNaN(page)) {
+        if (isNaN(page) || page < 1) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid page number",
+                message: "Invalid number page",
             });
         }
 
@@ -240,43 +247,44 @@ exports.getProductsCategory = async (req, res) => {
             if (isNaN(brandId)) {
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid value for brandId",
+                    message: "Invalid number brandId",
                 });
             }
-        } else {
-            return res.status(400).json({
-                success: false,
-                message: "brandId is required",
-            });
         }
 
         if (sizes) {
             if (!Array.isArray(sizes) || sizes.length === 0) {
                 return res.status(400).json({
                     success: false,
-                    message: "sizes must be a non-empty array",
+                    message: "sizes must be a array and not null",
+                });
+            }
+            sizes = sizes.map(Number);
+            if (!sizes.every((size) => !isNaN(size))) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid number size",
                 });
             }
         }
 
-        let minPrice = null;
-        let maxPrice = null;
-        if (priceRange) {
-            if (!["0-500000", "500000-1000000"].includes(priceRange)) {
+        if (minPrice !== undefined && maxPrice !== undefined) {
+            minPrice = Number(minPrice);
+            maxPrice = Number(maxPrice);
+            if (isNaN(minPrice) || isNaN(maxPrice)) {
                 return res.status(400).json({
                     success: false,
-                    message:
-                        "Invalid priceRange. Must be '0-500000' or '500000-1000000'",
+                    message: "Invalid number price",
                 });
             }
-
-            [minPrice, maxPrice] = priceRange
-                .split("-")
-                .map((num) => Number(num) / 1000);
+        } else {
+            minPrice = null;
+            maxPrice = null;
         }
 
         const countProduct = await Products.countProductCategory(
             brandId,
+            subBrandId,
             sizes,
             minPrice,
             maxPrice
@@ -286,6 +294,7 @@ exports.getProductsCategory = async (req, res) => {
 
         const result = await Products.getProductsCategory(
             brandId,
+            subBrandId,
             sizes,
             limitProduct,
             offSet,
@@ -297,53 +306,6 @@ exports.getProductsCategory = async (req, res) => {
             countProduct: countProduct[0].total_count,
             limitProduct: limitProduct,
             offSet: offSet,
-            totalPage: totalPage,
-            pageCurrent: page,
-            data: result,
-        });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: err.message,
-        });
-    }
-};
-exports.getProductSubBrandId = async (req, res) => {
-    try {
-        const { subBrandId, sizes, page = 1 } = req.body;
-        const limitProduct = 12;
-        const offSet = (page - 1) * limitProduct;
-        if (isNaN(subBrandId)) {
-            return res.status(400).json({
-                success: false,
-                message: "subBrandId must be a number",
-            });
-        }
-        if (sizes) {
-            if (!Array.isArray(sizes) || sizes.length < 1) {
-                return res.status(400).json({
-                    success: false,
-                    message: "sizes must be a array",
-                });
-            }
-        }
-
-        const countAllProducts = await Products.countSubBrand(
-            subBrandId,
-            sizes
-        );
-        const countNum = parseInt(countAllProducts[0].count);
-        const totalPage = Math.ceil(countNum / limitProduct);
-        const result = await Products.getProductsSubBrandId(
-            subBrandId,
-            sizes,
-            limitProduct,
-            offSet
-        );
-
-        res.status(200).json({
-            countAllProduct: countNum,
-            limitProduct: limitProduct,
             totalPage: totalPage,
             pageCurrent: page,
             data: result,

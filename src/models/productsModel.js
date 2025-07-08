@@ -221,6 +221,7 @@ const Products = {
 
     getProductsCategory: async (
         brandId,
+        subBrandId,
         sizes,
         limitProduct,
         offSet,
@@ -229,25 +230,33 @@ const Products = {
     ) => {
         try {
             let queryStr = `
-            SELECT p.id, p.name, p.brand_id, p.price, p.price_sale, 
+            SELECT p.id, p.name, p.brand_id, p.sub_brand_id, p.price, p.price_sale, 
             ARRAY_AGG(DISTINCT s.size ORDER BY s.size) AS sizes, 
             JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'type', i.image_type)) AS images 
             FROM products p
             JOIN sizes s ON p.id = s.product_id
             JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
-            WHERE p.brand_id = $1
         `;
-            const params = [brandId];
+            const params = [];
 
+            if (brandId) {
+                queryStr += `WHERE p.brand_id = $${params.length + 1}`;
+                params.push(brandId);
+            }
+
+            if (subBrandId) {
+                queryStr += `WHERE p.sub_brand_id = $${params.length + 1}`;
+                params.push(subBrandId);
+            }
             if (sizes) {
                 queryStr += ` AND s.size = ANY($${params.length + 1})`;
                 params.push(sizes);
             }
 
             if (minPrice !== null && maxPrice !== null) {
-                queryStr += ` AND p.price BETWEEN $${params.length + 1} AND $${
-                    params.length + 2
-                }`;
+                queryStr += ` AND p.price_sale BETWEEN $${
+                    params.length + 1
+                } AND $${params.length + 2}`;
                 params.push(minPrice, maxPrice);
             }
 
@@ -265,15 +274,29 @@ const Products = {
         }
     },
 
-    countProductCategory: async (brandId, sizes, minPrice, maxPrice) => {
+    countProductCategory: async (
+        brandId,
+        subBrandId,
+        sizes,
+        minPrice,
+        maxPrice
+    ) => {
         try {
             let queryStr = `
             SELECT COUNT(DISTINCT p.id) AS total_count
             FROM products p
             JOIN sizes s ON p.id = s.product_id
-            WHERE p.brand_id = $1
         `;
-            const params = [brandId];
+            const params = [];
+            if (brandId) {
+                queryStr += `WHERE p.brand_id = $${params.length + 1}`;
+                params.push(brandId);
+            }
+
+            if (subBrandId) {
+                queryStr += `WHERE p.sub_brand_id = $${params.length + 1}`;
+                params.push(subBrandId);
+            }
 
             if (sizes) {
                 queryStr += ` AND s.size = ANY($${params.length + 1})`;
@@ -281,9 +304,9 @@ const Products = {
             }
 
             if (minPrice !== null && maxPrice !== null) {
-                queryStr += ` AND p.price BETWEEN $${params.length + 1} AND $${
-                    params.length + 2
-                }`;
+                queryStr += ` AND p.price_sale BETWEEN $${
+                    params.length + 1
+                } AND $${params.length + 2}`;
                 params.push(minPrice, maxPrice);
             }
 
@@ -291,51 +314,6 @@ const Products = {
             return query.rows;
         } catch (err) {
             throw new Error(`Error counting product category: ${err.message}`);
-        }
-    },
-
-    getProductsSubBrandId: async (subBrandId, sizes, limitProduct, offSet) => {
-        try {
-            const query = await pool.query(
-                `
-                SELECT p.id, p.name, p.brand_id, p.sub_brand_id, ARRAY_AGG(DISTINCT s.size) AS sizes,
-        JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'type', i.image_type)) AS images
-        FROM products p
-        JOIN sizes s ON p.id = s.product_id ${
-            sizes ? "AND s.size = ANY($4)" : ""
-        }
-        JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
-        WHERE p.sub_brand_id = $1
-        GROUP BY p.id
-        ORDER BY p.id, p.brand_id
-        LIMIT $2 OFFSET $3
-                `,
-                sizes
-                    ? [subBrandId, limitProduct, offSet, sizes]
-                    : [subBrandId, limitProduct, offSet]
-            );
-            return query.rows;
-        } catch (err) {
-            throw new Error(`Error fetching sub-brand-id: ${err.message}`);
-        }
-    },
-
-    countSubBrand: async (subBrandId, sizes) => {
-        try {
-            const query = await pool.query(
-                `
-              SELECT COUNT(DISTINCT p.id) 
-        FROM products p
-        JOIN sizes s ON p.id = s.product_id ${
-            sizes ? "AND s.size = ANY($2)" : ""
-        }
-        WHERE p.sub_brand_id = $1  
-                `,
-                sizes ? [subBrandId, sizes] : [subBrandId]
-            );
-            return query.rows;
-        } catch (err) {
-            throw new Error(`Error COUNT sub Brand: ${err.message}`);
         }
     },
 };
