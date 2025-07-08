@@ -12,7 +12,8 @@ exports.getAllSize = async (req, res) => {
         });
     }
 };
-exports.findProduct = async (req, res) => {
+
+exports.searchProduct = async (req, res) => {
     const { search } = req.body;
 
     if (!search || search.trim() === "") {
@@ -25,7 +26,7 @@ exports.findProduct = async (req, res) => {
     const searchTerm = `%${search}%`;
 
     try {
-        const result = await Products.findProduct(searchTerm);
+        const result = await Products.searchProduct(searchTerm);
 
         if (result.length === 0) {
             return res.status(404).json({
@@ -156,72 +157,6 @@ exports.getSameProduct = async (req, res) => {
     }
 };
 
-exports.getBigSize = async (req, res) => {
-    let { page = 1, sizes, minPrice, maxPrice } = req.body;
-    const pageNum = parseInt(page);
-    const limitProduct = 12;
-    const offset = (pageNum - 1) * limitProduct;
-    try {
-        if (sizes) {
-            if (!Array.isArray(sizes) || sizes.length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: "sizes must be a non-empty array",
-                });
-            }
-        }
-
-        if (minPrice !== undefined && maxPrice !== undefined) {
-            minPrice = Number(minPrice);
-            maxPrice = Number(maxPrice);
-            if (isNaN(minPrice) || isNaN(maxPrice)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid number price",
-                });
-            }
-        } else {
-            minPrice = null;
-            maxPrice = null;
-        }
-
-        if (isNaN(pageNum) || pageNum < 1) {
-            return res.status(400).json({
-                success: false,
-                message: "Inavalid number page",
-            });
-        }
-
-        const countResult = await Products.countBigsize(
-            sizes,
-            minPrice,
-            maxPrice
-        );
-        const count = countResult[0]?.total_count || 0;
-        const total_page = Math.ceil(count / limitProduct);
-        const result = await Products.getBigSize(
-            limitProduct,
-            offset,
-            sizes,
-            minPrice,
-            maxPrice
-        );
-
-        res.status(200).json({
-            countProduct: count,
-            total_page: total_page,
-            limit: limitProduct,
-            pageCurrent: pageNum,
-            data: result,
-        });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: err.message,
-        });
-    }
-};
-
 exports.getProductsCategory = async (req, res) => {
     try {
         let {
@@ -250,6 +185,9 @@ exports.getProductsCategory = async (req, res) => {
                     message: "Invalid number brandId",
                 });
             }
+        }
+        if (subBrandId) {
+            subBrandId = parseInt(subBrandId);
         }
 
         if (sizes) {

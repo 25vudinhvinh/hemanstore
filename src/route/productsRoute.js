@@ -10,7 +10,6 @@ router.get("/mlb-limit", Products.getMLB);
 router.get("/newbalance-limit", Products.getNEWBALANCE);
 router.post("/detail", Products.getDetail);
 router.post("/same", Products.getSameProduct);
-router.post("/big-size", Products.getBigSize);
 router.post("/category", Products.getProductsCategory);
-router.post("/search", Products.findProduct);
+router.post("/search", Products.searchProduct);
 module.exports = router;
