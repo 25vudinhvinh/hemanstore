@@ -9,17 +9,27 @@ const Blogs = {
             throw new Error(`Error fetching blogs: ${err.message}`);
         }
     },
-
+    getBlogId: async (blogId) => {
+        try {
+            const query = await pool.query(
+                `SELECT * FROM blogs WHERE id = $1`,
+                [blogId]
+            );
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error get blog id: ${err.message}`);
+        }
+    },
     createComment: async (blogId, name, email, webUrl, comment) => {
         try {
             const query = await pool.query(
                 `
                 INSERT INTO review_blog(blog_id, name, email, web_url, comment)
-                VALUES ($1, $2, $3, $4, $5)
+                VALUES ($1, $2, $3, $4, $5) RETURNING id
                 `,
                 [blogId, name, email, webUrl, comment]
             );
-            return query.rows;
+            return query.rows[0].id;
         } catch (err) {
             throw new Error(`Error create comment: ${err.message}`);
         }

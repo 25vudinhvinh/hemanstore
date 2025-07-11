@@ -1,8 +1,10 @@
 const Products = require("../models/productsModel");
 exports.getAllSize = async (req, res) => {
     try {
-        const result = await Products.getAllSize();
+        const { brandId } = req.body;
+        const result = await Products.getAllSize(brandId);
         res.status(200).json({
+            success: true,
             data: result,
         });
     } catch (err) {

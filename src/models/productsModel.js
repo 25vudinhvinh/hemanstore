@@ -1,10 +1,15 @@
 const pool = require("../config/pg");
 
 const Products = {
-    getAllSize: async () => {
+    getAllSize: async (brandId) => {
         try {
-            const query = await pool.query(`SELECT DISTINCT size FROM sizes
-                ORDER BY size`);
+            const query = await pool.query(
+                `SELECT DISTINCT size FROM sizes s
+                JOIN products p ON s.product_id = p.id
+                WHERE p.brand_id = $1
+                ORDER BY size`,
+                [brandId]
+            );
             return query.rows;
         } catch (err) {
             throw new Error(`Error fetching size: ${err.message}`);

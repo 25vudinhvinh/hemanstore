@@ -14,7 +14,21 @@ exports.getBlogs = async (req, res) => {
         });
     }
 };
-
+exports.getBlogId = async (req, res) => {
+    try {
+        const { blogId } = req.body;
+        const result = await blogsModel.getBlogId(blogId);
+        res.status(200).json({
+            success: false,
+            data: result,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
 exports.createComment = [
     body("comment").notEmpty().withMessage("Bình luận là bắt buộc"),
     body("name").notEmpty().withMessage("Tên là bắt buộc"),
@@ -40,7 +54,8 @@ exports.createComment = [
             );
             res.status(200).json({
                 success: true,
-                data: result,
+                message: "Success created comment",
+                commentId: result,
             });
         } catch (err) {
             res.status(500).json({

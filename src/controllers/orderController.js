@@ -46,8 +46,8 @@ exports.createOrder = [
                 firstName,
                 lastName,
                 address,
-                numberPhone,
-                email
+                email,
+                numberPhone
             );
             const customerId = parseInt(createCustomerId.id);
             if (isNaN(customerId)) {
@@ -57,9 +57,7 @@ exports.createOrder = [
             }
 
             if (!Array.isArray(products) || products.length === 0) {
-                return res
-                    .status(400)
-                    .json({ message: "Danh sách sản phẩm không hợp lệ." });
+                return res.status(400).json({ message: "Invalid products" });
             }
 
             const createOrderId = await orderModel.createOrders(
@@ -77,7 +75,7 @@ exports.createOrder = [
                 if (quantity === undefined) {
                     return res
                         .status(400)
-                        .json({ message: "Quantity không được để trống." });
+                        .json({ message: "quantity is not null" });
                 }
 
                 const orderDetailId = await orderModel.createOrderDetail(
@@ -90,7 +88,7 @@ exports.createOrder = [
 
             res.status(200).json({
                 success: true,
-                message: "Đơn hàng đã được tạo.",
+                message: "Success created order",
                 orderId: orderId,
                 customerId: customerId,
             });
@@ -102,3 +100,18 @@ exports.createOrder = [
         }
     },
 ];
+
+exports.getOrder = async (req, res) => {
+    try {
+        const result = await orderModel.getOrder();
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};

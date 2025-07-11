@@ -61,6 +61,43 @@ const order = {
             throw new Error(`Error create orders: ${err.message}`);
         }
     },
+
+    getOrder: async () => {
+        try {
+            const query = await pool.query(`SELECT 
+    c.first_name ,
+    c.last_name ,
+    c.address,
+    c.phone_number,
+    c.email,
+    json_agg(
+        json_build_object(
+            'orderId', o.id,
+            'note', o.note,
+            'status', o.status,
+            'totalPrice', o.total_price,
+            'date', o.date,
+            'products', (
+                SELECT json_agg(
+                    json_build_object(
+                        'productId', od.product_id,
+                        'size', od.size,
+                        'quantity', od.quantity
+                    )
+                )
+                FROM order_detail od
+                WHERE od.order_id = o.id
+            )
+        )
+    ) AS orders
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+GROUP BY c.id;`);
+            return query.rows;
+        } catch (err) {
+            throw new Error(`Error get order: ${err.message}`);
+        }
+    },
 };
 
 module.exports = order;

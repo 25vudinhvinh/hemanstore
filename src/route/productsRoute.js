@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Products = require("../controllers/productsController");
 
-router.get("/all-size", Products.getAllSize);
+router.post("/size", Products.getAllSize);
 router.get("/hot", Products.getHotProducts);
 router.get("/adidas-limit", Products.getAdidas);
 router.get("/nike-limit", Products.getNike);
