@@ -12,4 +12,6 @@ router.post("/detail", Products.getDetail);
 router.post("/same", Products.getSameProduct);
 router.post("/category", Products.getProductsCategory);
 router.post("/search", Products.searchProduct);
+router.post("/create", Products.createProduct);
+router.post("/delete", Products.deleteProduct);
 module.exports = router;

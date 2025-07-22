@@ -1,4 +1,6 @@
 const Products = require("../models/productsModel");
+const { body, validationResult } = require("express-validator");
+
 exports.getAllSize = async (req, res) => {
     try {
         const { brandId } = req.body;
@@ -249,6 +251,82 @@ exports.getProductsCategory = async (req, res) => {
             totalPage: totalPage,
             pageCurrent: page,
             data: result,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message,
+        });
+    }
+};
+
+exports.createProduct = [
+    body("name").notEmpty().withMessage("Tên là bắt buộc."),
+    body("price").notEmpty().withMessage("Giá là bắt buộc."),
+    body("brandId").notEmpty().withMessage("Thương hiệu là bắt buộc."),
+    body("sizeArr")
+        .notEmpty()
+        .withMessage("Size là bắt buộc.")
+        .bail()
+        .isArray()
+        .withMessage("Size phải là một mảng"),
+    body("imageArr")
+        .notEmpty()
+        .withMessage("Image là bắt buộc.")
+        .bail()
+        .isArray()
+        .withMessage("Image phải là một mảng"),
+
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+            const {
+                name,
+                price,
+                priceSale = null,
+                brandId,
+                subBrandId = null,
+                sizeArr,
+                imageArr,
+            } = req.body;
+            const productId = await Products.createProduct(
+                name,
+                price,
+                priceSale,
+                brandId,
+                subBrandId
+            );
+
+            const createSize = await Products.createSize(productId, sizeArr);
+            const createImage = await Products.createImage(productId, imageArr);
+
+            res.status(200).json({
+                success: true,
+                message: "Thêm sản phẩm thành công.",
+                productId: productId,
+                createImage: createImage,
+                createSize: createSize,
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: err.message,
+            });
+        }
+    },
+];
+
+exports.deleteProduct = async (req, res) => {
+    try {
+        const { productId } = req.body;
+        const productDeleted = await Products.deleteProduct(productId);
+        res.status(200).json({
+            success: true,
+            message: "Xoá sản phẩm thành công.",
+            productDeleted,
         });
     } catch (err) {
         res.status(500).json({

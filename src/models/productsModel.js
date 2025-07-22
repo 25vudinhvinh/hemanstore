@@ -1,3 +1,4 @@
+const { query } = require("express-validator");
 const pool = require("../config/pg");
 
 const Products = {
@@ -280,6 +281,84 @@ const Products = {
             return query.rows;
         } catch (err) {
             throw new Error(`Error counting product category: ${err.message}`);
+        }
+    },
+
+    //admin create
+    createProduct: async (name, price, priceSale, brandId, subBrandId) => {
+        try {
+            const query = await pool.query(
+                `INSERT INTO products (name, price, price_sale, brand_id, sub_brand_id)
+             VALUES ($1, $2, $3, $4, $5) 
+             RETURNING id`,
+                [name, price, priceSale, brandId, subBrandId]
+            );
+            return query.rows[0].id;
+        } catch (err) {
+            throw new Error(`Error model create product: ${err.message}`);
+        }
+    },
+
+    createSize: async (productId, sizeArr) => {
+        try {
+            const results = [];
+            for (let i = 0; i < sizeArr.length; i++) {
+                const size =
+                    typeof sizeArr[i] === "object" ? sizeArr[i].id : sizeArr[i];
+                if (!Number.isInteger(size)) {
+                    throw new Error(`Invalid size value: ${sizeArr[i]}`);
+                }
+                const query = await pool.query(
+                    `INSERT INTO sizes(product_id, size) 
+                 VALUES ($1, $2) RETURNING *`,
+                    [productId, size]
+                );
+                results.push(query.rows[0]);
+            }
+            return results;
+        } catch (err) {
+            throw new Error(`Error model creat size: ${err.message}`);
+        }
+    },
+
+    createImage: async (productId, imageArr) => {
+        try {
+            const results = [];
+            for (let i = 0; i < imageArr.length; i++) {
+                const { imageUrl, displayOrder } = imageArr[i];
+                if (!imageUrl || !Number.isInteger(displayOrder)) {
+                    throw new Error(
+                        `Invalid image data at index ${i}: ${JSON.stringify(
+                            imageArr[i]
+                        )}`
+                    );
+                }
+                const query = await pool.query(
+                    `INSERT INTO images(product_id, image_url, display_order) 
+                 VALUES ($1, $2, $3) RETURNING *`,
+                    [productId, imageUrl, displayOrder]
+                );
+                results.push(query.rows[0]);
+            }
+            return results;
+        } catch (err) {
+            throw new Error(`Error model creat image: ${err.message}`);
+        }
+    },
+
+    // admin delete
+    deleteProduct: async (productId) => {
+        try {
+            if (productId) {
+                const query = pool.query(
+                    `DELETE FROM products
+                    WHERE id = $1
+                    `,
+                    [productId]
+                );
+            }
+        } catch (err) {
+            throw new Error(`Error model delete product: ${err.message}`);
         }
     },
 };
