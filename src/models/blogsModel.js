@@ -65,6 +65,32 @@ const Blogs = {
             throw new Error(`Error get blog new: ${err.message}`);
         }
     },
+
+    createBlog: async (title, imageUrl, body) => {
+        try {
+            const query = await pool.query(
+                `INSERT INTO blogs (title, image_url, body) 
+                VALUES ($1, $2, $3) 
+                RETURNING *`,
+                [title, imageUrl, body]
+            );
+            return query.rows[0];
+        } catch (err) {
+            throw new Error(`Error model create blog: ${err.message}`);
+        }
+    },
+
+    deleteBlog: async (blogId) => {
+        try {
+            const query = await pool.query(
+                `DELETE FROM blogs WHERE id = $1 RETURNING *`,
+                [blogId]
+            );
+            return query.rows[0];
+        } catch (err) {
+            throw new Error(`Error model delete blog: ${err.message}`);
+        }
+    },
 };
 
 module.exports = Blogs;

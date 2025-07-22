@@ -7,4 +7,6 @@ router.post("/create-comment", blogController.createComment);
 router.post("/get-comment", blogController.getComment);
 router.post("/new", blogController.getBlogNew);
 router.post("/id", blogController.getBlogId);
+router.post("/create", blogController.createBlog);
+router.post("/delete", blogController.deleteBlog);
 module.exports = router;
