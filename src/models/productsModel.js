@@ -361,6 +361,68 @@ const Products = {
             throw new Error(`Error model delete product: ${err.message}`);
         }
     },
+
+    //admin update
+    updateProduct: async (
+        productId,
+        name,
+        price,
+        priceSale,
+        brandId,
+        sizeArr,
+        imageArr
+    ) => {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            const productCheck = await client.query(
+                "SELECT id FROM products WHERE id = $1",
+                [productId]
+            );
+
+            if (productCheck.rowCount === 0) {
+                throw new Error(`Không tồn tại sản phẩm ID ${productId}`);
+            }
+
+            const query = await client.query(
+                `UPDATE products 
+            SET name = $1, price = $2, price_sale = $3, brand_id = $4
+            WHERE id = $5
+            RETURNING *`,
+                [name, price, priceSale, brandId, productId]
+            );
+
+            await client.query(`DELETE FROM sizes WHERE product_id = $1`, [
+                productId,
+            ]);
+            for (let size of sizeArr) {
+                await client.query(
+                    `INSERT INTO sizes (product_id, size) VALUES ($1, $2)`,
+                    [productId, size]
+                );
+            }
+
+            await client.query(`DELETE FROM images WHERE product_id = $1`, [
+                productId,
+            ]);
+            for (let img of imageArr) {
+                await client.query(
+                    `INSERT INTO images (product_id, image_url, display_order)
+                VALUES ($1, $2, $3)`,
+                    [productId, img.imageUrl, img.displayOrder]
+                );
+            }
+
+            await client.query("COMMIT");
+            return query.rows[0];
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw new Error(`Error model update product: ${err.message}`);
+        } finally {
+            client.release();
+        }
+    },
 };
 
 module.exports = Products;

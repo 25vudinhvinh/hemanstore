@@ -335,3 +335,62 @@ exports.deleteProduct = async (req, res) => {
         });
     }
 };
+
+exports.updateProduct = [
+    body("productId").notEmpty().withMessage("Product ID là bắt buộc."),
+    body("name").notEmpty().withMessage("Tên là bắt buộc."),
+    body("price").notEmpty().withMessage("Giá là bắt buộc."),
+    body("priceSale").notEmpty().withMessage("Giá khuyến mãi là bắt buộc."),
+    body("brandId").notEmpty().withMessage("Brand ID là bắt buộc."),
+    body("sizeArr")
+        .notEmpty()
+        .withMessage("Size là bắt buộc.")
+        .bail()
+        .isArray()
+        .withMessage("Size phải là một mảng"),
+    body("imageArr")
+        .notEmpty()
+        .withMessage("Image là bắt buộc.")
+        .bail()
+        .isArray()
+        .withMessage("Image phải là một mảng"),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+
+            const {
+                productId,
+                name,
+                price,
+                priceSale,
+                brandId,
+                sizeArr,
+                imageArr,
+            } = req.body;
+
+            const updatedProduct = await Products.updateProduct(
+                productId,
+                name,
+                price,
+                priceSale,
+                brandId,
+                sizeArr,
+                imageArr
+            );
+
+            res.status(200).json({
+                success: true,
+                message: "Sửa thành công.",
+                data: updatedProduct,
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: err.message,
+            });
+        }
+    },
+];
