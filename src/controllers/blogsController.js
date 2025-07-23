@@ -108,7 +108,7 @@ exports.createBlog = [
             if (!errors.isEmpty()) {
                 return res.status(400).json({ errors: errors.array() });
             }
-            const { title, imageUrl, body } = req.body;
+            const { title, imageUrl = null, body } = req.body;
 
             const createBlog = await Blogs.createBlog(title, imageUrl, body);
             res.status(200).json({

@@ -23,7 +23,7 @@ exports.searchProduct = async (req, res) => {
     if (!search || search.trim() === "") {
         return res.status(400).json({
             success: false,
-            message: "Search term is required",
+            message: "Search is required",
         });
     }
 
@@ -35,7 +35,7 @@ exports.searchProduct = async (req, res) => {
         if (result.length === 0) {
             return res.status(404).json({
                 success: true,
-                message: "Không có sản phẩm nào",
+                message: "Không có sản phẩm phù hợp.",
             });
         }
 

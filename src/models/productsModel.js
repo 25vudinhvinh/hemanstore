@@ -22,7 +22,7 @@ const Products = {
             const query = await pool.query(
                 `
                 SELECT p.id, p.name, p.price, p.price_sale, p.brand_id, i.image_url FROM products p 
-            JOIN images i ON p.id = i.product_id AND i.image_type IN('main')
+            JOIN images i ON p.id = i.product_id AND i.display_order IN (1)
             WHERE p.name ILIKE $1
             GROUP BY p.id, i.id
             ORDER BY p.id
@@ -175,10 +175,10 @@ const Products = {
             let queryStr = `
             SELECT p.id, p.name, p.brand_id, p.sub_brand_id, p.price, p.price_sale, 
             ARRAY_AGG(DISTINCT s.size ORDER BY s.size) AS sizes, 
-            JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'type', i.image_type)) AS images 
+            JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'display', i.display_order)) AS images 
             FROM products p
             JOIN sizes s ON p.id = s.product_id
-            JOIN images i ON p.id = i.product_id AND i.image_type IN ('main', 'hover')
+            JOIN images i ON p.id = i.product_id AND i.display_order IN (1, 2)
         `;
             const params = [];
 
@@ -225,7 +225,7 @@ const Products = {
             const query = await pool.query(queryStr, params);
             return query.rows;
         } catch (err) {
-            throw new Error(`Error fetching product category: ${err.message}`);
+            throw new Error(`Error model product category: ${err.message}`);
         }
     },
 
