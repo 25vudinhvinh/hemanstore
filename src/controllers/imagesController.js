@@ -1,5 +1,6 @@
 const Images = require("../models/imageModel");
 
+// get banner
 exports.getSlider = async (req, res) => {
     try {
         const slider = await Images.getUrlImageSlide();
@@ -15,6 +16,7 @@ exports.getSlider = async (req, res) => {
     }
 };
 
+// get image in shop
 exports.getImageShop = async (req, res) => {
     try {
         const imageShop = await Images.getImageShop();
@@ -30,28 +32,34 @@ exports.getImageShop = async (req, res) => {
     }
 };
 
+// create image shop or banner
 exports.createImage = [
     async (req, res) => {
         try {
-            const { imageUrl, bannerUrl } = req.body;
+            const { imageArr, bannerArr } = req.body;
 
-            if (!imageUrl && !bannerUrl) {
+            if (!imageArr && !bannerArr) {
                 return res.status(400).json({
                     success: false,
                     message: "Ảnh không được để trống.",
                 });
             }
+            const result = [];
+            if (Array.isArray(imageArr) || Array.isArray(bannerArr)) {
+                if (imageArr) {
+                    const createdImage = await Images.createImage(imageArr);
+                    result.push(createdImage);
+                }
 
-            const imageArr = [];
-
-            if (imageUrl) {
-                const createdImage = await Images.createImage(imageUrl);
-                imageArr.push(createdImage);
-            }
-
-            if (bannerUrl) {
-                const createdBanner = await Images.createImage(bannerUrl);
-                imageArr.push(createdBanner);
+                if (bannerArr) {
+                    const createdBanner = await Images.createImage(bannerArr);
+                    result.push(createdBanner);
+                }
+            } else {
+                res.status(400).json({
+                    success: false,
+                    message: "imageArr hoặc bannerArr phải là một mảng.",
+                });
             }
 
             return res.status(200).json({
@@ -69,22 +77,31 @@ exports.createImage = [
     },
 ];
 
+// delete image shop or banner
 exports.deleteImage = async (req, res) => {
     try {
         const { imageId, bannerId } = req.body;
-        let imageDeleteArr = [];
+
         if (imageId) {
             const deleteImageShop = await Images.deleteImage(imageId);
-            imageDeleteArr.push(deleteImageShop);
+            res.status(200).json({
+                success: true,
+                message: "Xoá ảnh thành công.",
+                deleteImageShop,
+            });
         } else if (bannerId) {
-            const deleteImageShop = await Images.deleteImage(bannerId);
-            imageDeleteArr.push(deleteImageShop);
+            const deleteBanner = await Images.deleteImage(bannerId);
+            res.status(200).json({
+                success: true,
+                message: "Xoá ảnh thành công.",
+                deleteBanner,
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: "imageId or bannerId is require.",
+            });
         }
-        res.status(200).json({
-            success: true,
-            message: "Xoá ảnh thành công.",
-            imageDeleteArr,
-        });
     } catch (err) {
         res.status(500).json({
             success: false,

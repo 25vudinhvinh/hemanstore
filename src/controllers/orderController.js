@@ -1,6 +1,7 @@
 const orderModel = require("../models/orderModel");
 const { body, validationResult } = require("express-validator");
 
+// create order
 exports.createOrder = [
     body("firstName").notEmpty().withMessage("Họ là bắt buộc"),
     body("lastName").notEmpty().withMessage("Tên là bắt buộc"),
@@ -39,7 +40,7 @@ exports.createOrder = [
             if (isNaN(totalPriceNum)) {
                 return res
                     .status(400)
-                    .json({ message: "Invalid total price." });
+                    .json({ message: "Total price must is a number." });
             }
 
             const createCustomerId = await orderModel.createCustomer(
@@ -88,7 +89,7 @@ exports.createOrder = [
 
             res.status(200).json({
                 success: true,
-                message: "Success created order",
+                message: "Đặt hàng thành công.",
                 orderId: orderId,
                 customerId: customerId,
             });
@@ -101,6 +102,7 @@ exports.createOrder = [
     },
 ];
 
+// get order by name, phone, address of customer
 exports.getOrder = async (req, res) => {
     try {
         const result = await orderModel.getOrder();

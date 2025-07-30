@@ -18,17 +18,33 @@ const Images = {
         }
     },
 
-    createImage: async (imageUrl, bannerUrl) => {
+    createImage: async (imageArr, bannerArr) => {
         try {
-            const query = await pool.query(
-                `INSERT INTO ${
-                    imageUrl ? "images_shop" : "slider"
-                }  (image_url)  
-                VALUES ($1)
-                RETURNING *`,
-                [imageUrl ? imageUrl : bannerUrl]
-            );
-            return query.rows[0];
+            const result = [];
+
+            if (imageArr && Array.isArray(imageArr)) {
+                for (let i = 0; i < imageArr.length; i++) {
+                    const image = imageArr[i];
+                    const query = await pool.query(
+                        `INSERT INTO images_shop (image_url) VALUES ($1) RETURNING *`,
+                        [image]
+                    );
+                    result.push(query.rows[0]);
+                }
+            }
+
+            if (bannerArr && Array.isArray(bannerArr)) {
+                for (let i = 0; i < bannerArr.length; i++) {
+                    const banner = bannerArr[i];
+                    const query = await pool.query(
+                        `INSERT INTO slider (banner_url) VALUES ($1) RETURNING *`,
+                        [banner]
+                    );
+                    result.push(query.rows[0]);
+                }
+            }
+
+            return result;
         } catch (err) {
             throw new Error(`Error model create image shop: ${err.message}`);
         }

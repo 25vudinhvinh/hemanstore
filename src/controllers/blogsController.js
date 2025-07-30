@@ -1,6 +1,8 @@
 const Blogs = require("../models/blogsModel");
 const blogsModel = require("../models/blogsModel");
 const { body, validationResult } = require("express-validator");
+
+// sget all blog
 exports.getBlogs = async (req, res) => {
     try {
         const blogs = await blogsModel.getBlogs();
@@ -15,6 +17,8 @@ exports.getBlogs = async (req, res) => {
         });
     }
 };
+
+// get blog theo id
 exports.getBlogId = async (req, res) => {
     try {
         const { blogId } = req.body;
@@ -30,7 +34,10 @@ exports.getBlogId = async (req, res) => {
         });
     }
 };
+
+// create comment
 exports.createComment = [
+    body("blogId").notEmpty().withMessage("blogId là bắt buộc"),
     body("comment").notEmpty().withMessage("Bình luận là bắt buộc"),
     body("name").notEmpty().withMessage("Tên là bắt buộc"),
     body("email")
@@ -55,7 +62,7 @@ exports.createComment = [
             );
             res.status(200).json({
                 success: true,
-                message: "Success created comment",
+                message: "Gửi bình luận thành công.",
                 commentId: result,
             });
         } catch (err) {
@@ -67,6 +74,7 @@ exports.createComment = [
     },
 ];
 
+// get comment
 exports.getComment = async (req, res) => {
     try {
         const { blogId } = req.body;
@@ -83,6 +91,7 @@ exports.getComment = async (req, res) => {
     }
 };
 
+// get new blog
 exports.getBlogNew = async (req, res) => {
     try {
         const { blogId } = req.body;
@@ -99,6 +108,7 @@ exports.getBlogNew = async (req, res) => {
     }
 };
 
+// create blog
 exports.createBlog = [
     body("title").notEmpty().withMessage("Tiêu đề không được để trống."),
     body("body").notEmpty().withMessage("Nội dung không được để trống."),
@@ -125,6 +135,7 @@ exports.createBlog = [
     },
 ];
 
+// delelte blog
 exports.deleteBlog = async (req, res) => {
     try {
         const { blogId } = req.body;

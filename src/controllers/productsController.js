@@ -1,6 +1,7 @@
 const Products = require("../models/productsModel");
 const { body, validationResult } = require("express-validator");
 
+// get size by brandId
 exports.getAllSize = async (req, res) => {
     try {
         const { brandId } = req.body;
@@ -17,13 +18,14 @@ exports.getAllSize = async (req, res) => {
     }
 };
 
+// search name product by name
 exports.searchProduct = async (req, res) => {
     const { search } = req.body;
 
     if (!search || search.trim() === "") {
         return res.status(400).json({
             success: false,
-            message: "Search is required",
+            message: "search is required.",
         });
     }
 
@@ -145,7 +147,7 @@ exports.getDetail = async (req, res) => {
 exports.getSameProduct = async (req, res) => {
     const { brandId, productId } = req.body;
     if (!brandId || !productId) {
-        res.status(404).json("Invalid brand_id Or product_id");
+        res.status(404).json("brandId or productId is require.");
     }
     try {
         const result = await Products.getSameProduct(brandId, productId);
@@ -260,6 +262,7 @@ exports.getProductsCategory = async (req, res) => {
     }
 };
 
+// create products with sizeArr and imageArr (url, display_order)
 exports.createProduct = [
     body("name").notEmpty().withMessage("Tên là bắt buộc."),
     body("price").notEmpty().withMessage("Giá là bắt buộc."),
@@ -319,23 +322,34 @@ exports.createProduct = [
     },
 ];
 
-exports.deleteProduct = async (req, res) => {
-    try {
-        const { productId } = req.body;
-        const productDeleted = await Products.deleteProduct(productId);
-        res.status(200).json({
-            success: true,
-            message: "Xoá sản phẩm thành công.",
-            productDeleted,
-        });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: err.message,
-        });
-    }
-};
+// delete product
+exports.deleteProduct = [
+    body("productId")
+        .notEmpty()
+        .withMessage("ID sản phầm cần xoá là bắt buộc."),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+            const { productId } = req.body;
+            const productDeleted = await Products.deleteProduct(productId);
+            res.status(200).json({
+                success: true,
+                message: "Xoá sản phẩm thành công.",
+                productDeleted,
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: err.message,
+            });
+        }
+    },
+];
 
+// update product
 exports.updateProduct = [
     body("productId").notEmpty().withMessage("Product ID là bắt buộc."),
     body("name").notEmpty().withMessage("Tên là bắt buộc."),

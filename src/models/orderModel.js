@@ -1,5 +1,6 @@
 const pool = require("../config/pg");
 const order = {
+    // create customer
     createCustomer: async (
         firstName,
         lastName,
@@ -32,6 +33,7 @@ const order = {
         }
     },
 
+    // create order detail
     createOrderDetail: async (orderId, productId, size, quantity) => {
         try {
             const query = await pool.query(
@@ -47,6 +49,7 @@ const order = {
         }
     },
 
+    // create order
     createOrders: async (customerId, totalPrice, note = null) => {
         try {
             const query = await pool.query(

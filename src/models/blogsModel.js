@@ -25,13 +25,13 @@ const Blogs = {
             const query = await pool.query(
                 `
                 INSERT INTO review_blog(blog_id, name, email, web_url, comment)
-                VALUES ($1, $2, $3, $4, $5) RETURNING id
+                VALUES ($1, $2, $3, $4, $5) RETURNING *
                 `,
-                [blogId, name, email, webUrl, comment]
+                [blogId, name, email, comment, webUrl]
             );
-            return query.rows[0].id;
+            return query.rows[0];
         } catch (err) {
-            throw new Error(`Error create comment: ${err.message}`);
+            throw new Error(`Error model create comment: ${err.message}`);
         }
     },
 

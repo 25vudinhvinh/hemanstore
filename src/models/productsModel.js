@@ -2,6 +2,7 @@ const { query } = require("express-validator");
 const pool = require("../config/pg");
 
 const Products = {
+    // get size by brandID
     getAllSize: async (brandId) => {
         try {
             const query = await pool.query(
@@ -17,6 +18,7 @@ const Products = {
         }
     },
 
+    // search product by name
     searchProduct: async (searchTerm) => {
         try {
             const query = await pool.query(
@@ -35,6 +37,7 @@ const Products = {
         }
     },
 
+    // get hot products
     getHotProducts: async () => {
         try {
             const query = await pool.query(
@@ -51,6 +54,7 @@ const Products = {
         }
     },
 
+    // get adidas
     getAdidas: async () => {
         try {
             const query = await pool.query(
@@ -67,6 +71,7 @@ const Products = {
         }
     },
 
+    // get nike
     getNike: async () => {
         try {
             const query = await pool.query(
@@ -83,6 +88,7 @@ const Products = {
         }
     },
 
+    // get mlb
     getMLB: async () => {
         try {
             const query = await pool.query(
@@ -99,6 +105,7 @@ const Products = {
         }
     },
 
+    // get newbalance
     getNEWBALANCE: async () => {
         try {
             const query = await pool.query(
@@ -115,6 +122,7 @@ const Products = {
         }
     },
 
+    // get detail
     getDetail: async (productId) => {
         try {
             const query = await pool.query(
@@ -142,15 +150,16 @@ const Products = {
         }
     },
 
+    // get same product
     getSameProduct: async (brandId, productId) => {
         try {
             const query = await pool.query(
                 `
                 SELECT p.id, p.name, p.price, p.price_sale, p.views, p.brand_id,
-         jsonb_agg(json_build_object('url', i.image_url, 'type', i.image_type)) AS images
+         jsonb_agg(json_build_object('url', i.image_url, 'order', i.display_order)) AS images
         FROM products p
         LEFT JOIN images i ON p.id = i.product_id
-        WHERE p.brand_id = $1 AND i.image_type IN ('main', 'hover') AND p.id <> $2
+        WHERE p.brand_id = $1 AND i.display_order IN (1, 2) AND p.id <> $2
         GROUP BY p.id
         ORDER BY RANDOM()
         LIMIT 8;`,
@@ -162,6 +171,7 @@ const Products = {
         }
     },
 
+    // filter product by category
     getProductsCategory: async (
         brandId,
         subBrandId,
@@ -175,7 +185,7 @@ const Products = {
             let queryStr = `
             SELECT p.id, p.name, p.brand_id, p.sub_brand_id, p.price, p.price_sale, 
             ARRAY_AGG(DISTINCT s.size ORDER BY s.size) AS sizes, 
-            JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'display', i.display_order)) AS images 
+            JSONB_AGG(DISTINCT JSONB_BUILD_OBJECT('url', i.image_url, 'order', i.display_order)) AS images 
             FROM products p
             JOIN sizes s ON p.id = s.product_id
             JOIN images i ON p.id = i.product_id AND i.display_order IN (1, 2)
@@ -229,6 +239,7 @@ const Products = {
         }
     },
 
+    // count product by filter
     countProductCategory: async (
         brandId,
         subBrandId,
@@ -299,6 +310,7 @@ const Products = {
         }
     },
 
+    // create size
     createSize: async (productId, sizeArr) => {
         try {
             const results = [];
@@ -321,6 +333,7 @@ const Products = {
         }
     },
 
+    // create image
     createImage: async (productId, imageArr) => {
         try {
             const results = [];
