@@ -1,6 +1,7 @@
 const pool = require("../config/pg");
 
 const Images = {
+    // get image slide
     getUrlImageSlide: async () => {
         try {
             const result = await pool.query("SELECT * FROM slider");
@@ -9,6 +10,8 @@ const Images = {
             throw new Error(`Error Fetching Slider: ${err.message}`);
         }
     },
+
+    // get image
     getImageShop: async () => {
         try {
             const result = await pool.query("SELECT * FROM images_shop");
@@ -18,6 +21,7 @@ const Images = {
         }
     },
 
+    // admin create image by image shop or banner
     createImage: async (imageArr, bannerArr) => {
         try {
             const result = [];
@@ -50,15 +54,16 @@ const Images = {
         }
     },
 
-    deleteImage: async (id) => {
+    // delete image by imageId or bannerId
+    deleteImage: async (imageId, bannerId) => {
+        const id = imageId || bannerId;
+        const table = imageId ? "images_shop" : "slider";
         try {
-            if (id) {
-                const query = await pool.query(
-                    `DELETE FROM images_shop WHERE id = $1 RETURNING *`,
-                    [id]
-                );
-                return query.rows[0];
-            }
+            const query = await pool.query(
+                `DELETE FROM ${table} WHERE id = $1 RETURNING *`,
+                [id]
+            );
+            return query.rows[0];
         } catch (err) {
             throw new Error(`Error model delete image shop: ${err.message}`);
         }
