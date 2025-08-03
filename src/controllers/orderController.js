@@ -38,9 +38,9 @@ exports.createOrder = [
 
             const totalPriceNum = parseFloat(totalPrice);
             if (isNaN(totalPriceNum)) {
-                return res
-                    .status(400)
-                    .json({ message: "Total price must is a number." });
+                return res.status(400).json({
+                    message: "totalPrice is require and must is a number.",
+                });
             }
 
             const createCustomerId = await orderModel.createCustomer(
@@ -58,7 +58,9 @@ exports.createOrder = [
             }
 
             if (!Array.isArray(products) || products.length === 0) {
-                return res.status(400).json({ message: "Invalid products" });
+                return res
+                    .status(400)
+                    .json({ message: "products must be a array." });
             }
 
             const createOrderId = await orderModel.createOrders(
@@ -73,10 +75,12 @@ exports.createOrder = [
                 const size = product.size;
                 const quantity = product.quantity;
 
-                if (quantity === undefined) {
+                if (quantity || !productId || !size) {
                     return res
                         .status(400)
-                        .json({ message: "quantity is not null" });
+                        .json({
+                            message: "quantity, productId and size is require.",
+                        });
                 }
 
                 const orderDetailId = await orderModel.createOrderDetail(

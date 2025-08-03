@@ -167,7 +167,7 @@ const Products = {
             );
             return query.rows;
         } catch (err) {
-            throw new Error(`Error fetching same product: ${err.message}`);
+            throw new Error(`Error model same product: ${err.message}`);
         }
     },
 
@@ -295,7 +295,7 @@ const Products = {
         }
     },
 
-    //admin create
+    //admin create product
     createProduct: async (name, price, priceSale, brandId, subBrandId) => {
         try {
             const query = await pool.query(
@@ -310,13 +310,12 @@ const Products = {
         }
     },
 
-    // create size
+    // admin create size
     createSize: async (productId, sizeArr) => {
         try {
             const results = [];
             for (let i = 0; i < sizeArr.length; i++) {
-                const size =
-                    typeof sizeArr[i] === "object" ? sizeArr[i].id : sizeArr[i];
+                const size = sizeArr[i];
                 if (!Number.isInteger(size)) {
                     throw new Error(`Invalid size value: ${sizeArr[i]}`);
                 }
@@ -333,13 +332,13 @@ const Products = {
         }
     },
 
-    // create image
+    // admin create image
     createImage: async (productId, imageArr) => {
         try {
             const results = [];
             for (let i = 0; i < imageArr.length; i++) {
-                const { imageUrl, displayOrder } = imageArr[i];
-                if (!imageUrl || !Number.isInteger(displayOrder)) {
+                const { url, order } = imageArr[i];
+                if (!url || !Number.isInteger(order)) {
                     throw new Error(
                         `Invalid image data at index ${i}: ${JSON.stringify(
                             imageArr[i]
@@ -349,7 +348,7 @@ const Products = {
                 const query = await pool.query(
                     `INSERT INTO images(product_id, image_url, display_order) 
                  VALUES ($1, $2, $3) RETURNING *`,
-                    [productId, imageUrl, displayOrder]
+                    [productId, url, order]
                 );
                 results.push(query.rows[0]);
             }

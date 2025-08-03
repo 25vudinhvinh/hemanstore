@@ -65,15 +65,11 @@ const order = {
         }
     },
 
+    // get order group by customer
     getOrder: async () => {
         try {
             const query = await pool.query(`SELECT 
-    c.first_name ,
-    c.last_name ,
-    c.address,
-    c.phone_number,
-    c.email,
-    json_agg(
+    c.first_name , c.last_name , c.address, c.phone_number, c.email, json_agg(
         json_build_object(
             'orderId', o.id,
             'note', o.note,

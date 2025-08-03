@@ -1,7 +1,7 @@
 const pool = require("../config/pg");
 
 const Images = {
-    // get image slide
+    // get image slide (banner)
     getUrlImageSlide: async () => {
         try {
             const result = await pool.query("SELECT * FROM slider");

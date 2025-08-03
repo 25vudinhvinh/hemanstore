@@ -4,10 +4,7 @@ const Brand = {
     getAll: async () => {
         try {
             const result = await poll.query(
-                `SELECT 
-        b.id AS brand_id,
-        b.name AS brand_name,
-        b.display_order,
+                `SELECT b.id AS brand_id, b.name AS brand_name, b.display_order,
         CASE 
             WHEN COUNT(sb.id) > 0 THEN JSON_AGG(JSON_BUILD_OBJECT('sub_brand_id', sb.id, 'name', sb.name)) 
             ELSE NULL 
@@ -23,7 +20,7 @@ const Brand = {
             );
             return result.rows;
         } catch (err) {
-            throw new Error(`Error fetching brands: ${err.message}`);
+            throw new Error(`Error model brands: ${err.message}`);
         }
     },
 };

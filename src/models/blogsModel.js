@@ -1,6 +1,7 @@
 const pool = require("../config/pg");
 
 const Blogs = {
+    // get all blog
     getBlogs: async () => {
         try {
             const query = await pool.query(`SELECT * FROM blogs`);
@@ -9,6 +10,8 @@ const Blogs = {
             throw new Error(`Error fetching blogs: ${err.message}`);
         }
     },
+
+    // get blog by id
     getBlogId: async (blogId) => {
         try {
             const query = await pool.query(
@@ -20,6 +23,8 @@ const Blogs = {
             throw new Error(`Error get blog id: ${err.message}`);
         }
     },
+
+    // create commet by blogId
     createComment: async (blogId, name, email, webUrl, comment) => {
         try {
             const query = await pool.query(
@@ -35,6 +40,7 @@ const Blogs = {
         }
     },
 
+    // get comment blog by blogId
     getComment: async (blogId) => {
         try {
             const query = await pool.query(
@@ -50,6 +56,7 @@ const Blogs = {
         }
     },
 
+    // get blog new by created
     getBlogNew: async (blogId) => {
         try {
             const query = await pool.query(
@@ -66,6 +73,7 @@ const Blogs = {
         }
     },
 
+    // admin create blog
     createBlog: async (title, imageUrl, body) => {
         try {
             const query = await pool.query(
@@ -80,6 +88,7 @@ const Blogs = {
         }
     },
 
+    // admin delete blog
     deleteBlog: async (blogId) => {
         try {
             const query = await pool.query(
